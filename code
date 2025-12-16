@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mental Health Categories Spinner (Educational)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --accent: #4f46e5;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+    }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(circle at 30% 20%, #0b1227, #0f172a 60%);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+    .app {
+      width: 100%;
+      max-width: 900px;
+      padding: 2rem;
+    }
+    .card {
+      background: linear-gradient(180deg, #0d1326, #0b1223);
+      border: 1px solid #1f2937;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      border-radius: 18px;
+      padding: 1.5rem;
+    }
+    h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.6rem;
+      letter-spacing: 0.3px;
+    }
+    .sub {
+      color: var(--muted);
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+    .grid {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .wheel-wrap {
+      display: grid;
+      place-items: center;
+    }
+    .wheel {
+      position: relative;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      border: 8px solid #111827;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      transform: translateZ(0);
+    }
+    .slice {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      transform-origin: 100% 100%;
+      left: 50%;
+      top: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.82rem;
+      text-align: center;
+      padding: 0.5rem;
+    }
+    .needle {
+      position: relative;
+      height: 0;
+    }
+    .needle::after {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 16px solid #ef4444;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+    }
+    .panel {
+      background: #0b1225;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 1rem;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.06s ease, opacity 0.2s ease;
+    }
+    button:active { transform: scale(0.98); }
+    button.secondary {
+      background: #374151;
+    }
+    .result {
+      margin-top: 0.75rem;
+      background: #0a1220;
+      border: 1px dashed #334155;
+      border-radius: 10px;
+      padding: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: #d1d5db;
+    }
+    ul { margin: 0.5rem 0 0 1rem; color: #cbd5e1; }
+    li { margin: 0.2rem 0; }
+    .foot {
+      margin-top: 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .muted { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <h1>🎡 Educational Spinner: DSM‑5‑TR Mental Health Categories</h1>
+      <div class="sub">Spins broad diagnostic categories for learning. You can then spin within a category to view example disorders. (Not for diagnosis.)</div>
+
+      <div class="grid">
+        <div class="wheel-wrap">
+          <div class="needle"></div>
+          <div id="wheel" class="wheel" aria-label="Spinner Wheel"></div>
+          <div style="margin-top: 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <button id="spinBtn">Spin Category</button>
+            <button id="spinWithinBtn" class="secondary">Spin within Category</button>
+          </div>
+          <div id="result" class="result" role="status">Result: —</div>
+        </div>
+
+        <div class="panel">
+          <strong>Included Categories:</strong>
+          <ul id="catList"></ul>
+          <div class="foot">
+            <strong>Note:</strong> This tool is for education only. If you have concerns about mental health, consider speaking with a licensed professional or calling your local resources.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Categories (DSM‑5‑TR aligned, condensed for spinner)
+    const categories = [
+      "Neurodevelopmental Disorders",
+      "Schizophrenia Spectrum & Other Psychotic Disorders",
+      "Bipolar & Related Disorders",
+      "Depressive Disorders",
+      "Anxiety Disorders",
+      "Obsessive‑Compulsive & Related Disorders",
+      "Trauma‑ & Stressor‑Related Disorders",
+      "Dissociative Disorders",
+      "Somatic Symptom & Related Disorders",
+      "Feeding & Eating Disorders",
+      "Elimination Disorders",
+      "Sleep‑Wake Disorders",
+      "Sexual Dysfunctions",
+      "Gender Dysphoria",
+      "Disruptive, Impulse‑Control & Conduct Disorders",
+      "Substance‑Related & Addictive Disorders",
+      "Neurocognitive Disorders",
+      "Personality Disorders",
+      "Paraphilic Disorders (clinical category)",
+      "Other Specified/Unspecified Mental Disorders"
+    ];
+
+    // Example disorders within selected categories (non-exhaustive, educational)
+    const disordersByCategory = {
+      "Neurodevelopmental Disorders": [
+        "Intellectual Disability","Autism Spectrum Disorder","ADHD","Specific Learning Disorder",
+        "Language Disorder","Speech Sound Disorder","Social (Pragmatic) Communication Disorder",
+        "Tourette’s Disorder","Persistent (Chronic) Tic Disorder"
+      ],
+      "Schizophrenia Spectrum & Other Psychotic Disorders": [
+        "Schizophrenia","Schizoaffective Disorder","Delusional Disorder","Brief Psychotic Disorder",
+        "Schizophreniform Disorder"
+      ],
+      "Bipolar & Related Disorders": [
+        "Bipolar I Disorder","Bipolar II Disorder","Cyclothymic Disorder"
+      ],
+      "Depressive Disorders": [
+        "Major Depressive Disorder","Persistent Depressive Disorder (Dysthymia)",
+        "Premenstrual Dysphoric Disorder","Disruptive Mood Dysregulation Disorder"
+      ],
+      "Anxiety Disorders": [
+        "Generalized Anxiety Disorder","Panic Disorder","Agoraphobia",
+        "Social Anxiety Disorder","Specific Phobia","Separation Anxiety Disorder","Selective Mutism"
+      ],
+      "Obsessive‑Compulsive & Related Disorders": [
+        "Obsessive‑Compulsive Disorder","Body Dysmorphic Disorder","Hoarding Disorder",
+        "Trichotillomania","Excoriation (Skin‑Picking) Disorder"
+      ],
+      "Trauma‑ & Stressor‑Related Disorders": [
+        "Post‑Traumatic Stress Disorder","Acute Stress Disorder","Adjustment Disorders",
+        "Reactive Attachment Disorder","Disinhibited Social Engagement Disorder","Prolonged Grief Disorder"
+      ],
+      "Dissociative Disorders": [
+        "Dissociative Identity Disorder","Dissociative Amnesia","Depersonalization/Derealization Disorder"
+      ],
+      "Somatic Symptom & Related Disorders": [
+        "Somatic Symptom Disorder","Illness Anxiety Disorder","Conversion Disorder",
+        "Factitious Disorder"
+      ],
+      "Feeding & Eating Disorders": [
+        "Anorexia Nervosa","Bulimia Nervosa","Binge‑Eating Disorder","ARFID","Pica","Rumination Disorder"
+      ],
+      "Elimination Disorders": [
+        "Enuresis","Encopresis"
+      ],
+      "Sleep‑Wake Disorders": [
+        "Insomnia Disorder","Narcolepsy","Hypersomnolence Disorder",
+        "Breathing‑Related Sleep Disorders","Circadian Rhythm Sleep‑Wake Disorders","Parasomnias"
+      ],
+      "Sexual Dysfunctions": [
+        "Erectile Disorder","Female Orgasmic Disorder","Delayed Ejaculation",
+        "Genito‑Pelvic Pain/Penetration Disorder","Premature Ejaculation","Female Sexual Interest/Arousal Disorder"
+      ],
+      "Gender Dysphoria": [
+        "Gender Dysphoria in Children","Gender Dysphoria in Adolescents & Adults"
+      ],
+      "Disruptive, Impulse‑Control & Conduct Disorders": [
+        "Oppositional Defiant Disorder","Intermittent Explosive Disorder","Conduct Disorder","Antisocial Personality Disorder",
+        "Pyromania","Kleptomania"
+      ],
+      "Substance‑Related & Addictive Disorders": [
+        "Alcohol Use Disorder","Cannabis Use Disorder","Opioid Use Disorder","Stimulant Use Disorder",
+        "Tobacco Use Disorder","Gambling Disorder"
+      ],
+      "Neurocognitive Disorders": [
+        "Delirium","Major Neurocognitive Disorder (e.g., Alzheimer’s, Lewy body, vascular, frontotemporal)",
+        "Mild Neurocognitive Disorder"
+      ],
+      "Personality Disorders": [
+        "Paranoid PD","Schizoid PD","Schizotypal PD",
+        "Borderline PD","Narcissistic PD","Histrionic PD","Antisocial PD",
+        "Avoidant PD","Dependent PD","Obsessive‑Compulsive PD"
+      ],
+      // Paraphilic category omitted specific listings for brevity and appropriateness
+      "Paraphilic Disorders (clinical category)": [
+        "Category selected (specific examples intentionally not enumerated here)."
+      ],
+      "Other Specified/Unspecified Mental Disorders": [
+        "Other Specified Mental Disorder","Unspecified Mental Disorder"
+      ]
+    };
+
+    // Build category list in the side panel
+    const catListEl = document.getElementById("catList");
+    categories.forEach(c => {
+      const li = document.createElement("li");
+      li.textContent = c;
+      catListEl.appendChild(li);
+    });
+
+    // Create wheel slices programmatically
+    const wheelEl = document.getElementById("wheel");
+    const sliceCount = categories.length;
+    const anglePerSlice = 360 / sliceCount;
+    const colors = [
+      "#2563eb","#10b981","#f59e0b","#ef4444","#8b5cf6","#14b8a6","#f97316",
+      "#22c55e","#3b82f6","#a855f7","#06b6d4","#84cc16","#e11d48","#38bdf8",
+      "#f43f5e","#7c3aed","#0ea5e9","#65a30d","#d946ef","#16a34a"
+    ];
+
+    categories.forEach((label, i) => {
+      const slice = document.createElement("div");
+      slice.className = "slice";
+      slice.style.background = colors[i % colors.length];
+      slice.style.transform = `rotate(${i * anglePerSlice}deg) skewY(${90 - anglePerSlice}deg)`;
+      slice.innerHTML = `<div style="transform: skewY(${-(90 - anglePerSlice)}deg) rotate(${anglePerSlice/2}deg); max-width: 90%; font-weight: 600;">${label}</div>`;
+      wheelEl.appendChild(slice);
+    });
+
+    // Spin logic
+    let spinning = false;
+    let selectedCategory = null;
+    const spinBtn = document.getElementById("spinBtn");
+    const spinWithinBtn = document.getElementById("spinWithinBtn");
+    const resultEl = document.getElementById("result");
+
+    function randomInt(max) { return Math.floor(Math.random() * max); }
+
+    function spinCategory() {
+      if (spinning) return;
+      spinning = true;
+
+      const targetIndex = randomInt(sliceCount);
+      selectedCategory = categories[targetIndex];
+
+      // Animate wheel to land on target slice (simulate rotation)
+      const turns = 6; // full rotations for flair
+      const finalDeg = (turns * 360) + (360 - (targetIndex * anglePerSlice) - anglePerSlice/2);
+      wheelEl.style.transition = "transform 2.2s cubic-bezier(.2,.8,.2,1)";
+      wheelEl.style.transform = `rotate(${finalDeg}deg)`;
+
+      setTimeout(() => {
+        spinning = false;
+        resultEl.textContent = `Result: ${selectedCategory}`;
+      }, 2300);
+    }
+
+    function spinWithin() {
+      if (!selectedCategory) {
+        resultEl.textContent = "Result: — Please spin a category first.";
+        return;
+      }
+      const list = disordersByCategory[selectedCategory] || ["No sample disorders available."];
+      const pick = list[randomInt(list.length)];
+      resultEl.textContent = `Result: ${selectedCategory} → ${pick}`;
+    }
+
+    spinBtn.addEventListener("click", spinCategory);
+    spinWithinBtn.addEventListener("click", spinWithin);
+  </script>
+</</body>
