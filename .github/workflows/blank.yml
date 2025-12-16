@@ -7,7 +7,7 @@
   <title>Mental Health Categories Spinner (Educational)</title>
   <style>
     :root {
-      --bg: #0f172a;
+      --bg: #0f172a
       --card: #111827;
       --accent: #4f46e5;
       --text: #e5e7eb;
